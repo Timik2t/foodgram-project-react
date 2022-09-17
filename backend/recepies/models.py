@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 from . import settings
@@ -8,6 +8,14 @@ User = get_user_model()
 
 
 class Tag(models.Model):
+
+    hex_validator = RegexValidator(
+        regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+        message=(
+            'Введите валидный цветовой HEX-код!'
+        )
+    )
+
     name = models.CharField(
         max_length=settings.MAX_LENGTH_TAG_NAME,
         unique=True,
@@ -21,6 +29,7 @@ class Tag(models.Model):
         default='#49B64E',
         unique=True,
         max_length=7,
+        validators=[hex_validator, ],
         verbose_name='Цветовой HEX-код',
         help_text='https://colorscheme.ru/html-colors.html'
         )
