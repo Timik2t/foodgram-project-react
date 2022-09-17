@@ -51,7 +51,7 @@ class Ingredient(models.Model):
         return self.name
 
 
-class Recepie(models.Model):
+class Recipe(models.Model):
     DISPLAY = (
         '{name}, '
         '{author}'
@@ -73,12 +73,12 @@ class Recepie(models.Model):
         verbose_name='Тег'
     )
     name = models.CharField(
-        max_length=settings.MAX_LENGTH_RECEPIE_NAME,
+        max_length=settings.MAX_LENGTH_RECIPE_NAME,
         null=False,
         verbose_name='Название'
         )
     text = models.TextField(
-        max_length=settings.MAX_LENGTH_RECEPIE_TEXT,
+        max_length=settings.MAX_LENGTH_RECIPE_TEXT,
         verbose_name='Описание рецепта'
         )
     image = models.ImageField(
@@ -113,16 +113,14 @@ class IngredientAmount(models.Model):
         '{ingredients}, '
         '{amount}'
     )
-    ingredients = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='ingredients_in_recipe',
         verbose_name='Ингредиент'
     )
-    recepie = models.ForeignKey(
-        Recepie,
+    recipe = models.ForeignKey(
+        Recipe,
         on_delete=models.CASCADE,
-        related_name='recipes_ingredients_list',
         verbose_name='Рецепт'
         )
     amount = models.PositiveIntegerField(
@@ -132,10 +130,50 @@ class IngredientAmount(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Количество ингридиентов'
+        verbose_name = 'Количество ингредиента для рецепта'
+        constraints = [
+            models.UniqueConstraint(
+                name='recipe_ingredient_unique',
+                fields=['recipe', 'ingredient'],
+            ),
+        ]
+
+
+class BaseAddRecipeToList(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE
+    )
+    add_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата добавления'
+    )
 
     def __str__(self):
-        return self.DISPLAY.format(
-            ingredients=self.ingredients,
-            amount=self.amount
-        )
+        return self.name
+
+    class Meta:
+        abstract = True
+        ordering = ('-add_date',)
+
+
+class Favorite(BaseAddRecipeToList):
+
+    class Meta(BaseAddRecipeToList.Meta):
+        verbose_name = 'Избранное'
+        constraints = [
+            models.UniqueConstraint(
+                name='favorite_unique',
+                fields=['recipe', 'user'],
+            ),
+        ]
+
+
+class ShoppingCart(BaseAddRecipeToList):
+
+    class Meta(BaseAddRecipeToList.Meta):
+        verbose_name = 'Список покупок'

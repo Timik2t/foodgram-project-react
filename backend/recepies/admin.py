@@ -1,10 +1,17 @@
 from django.contrib import admin
 
-from .models import Recepie, Ingredient, Tag
+from .models import (
+    Ingredient,
+    IngredientAmount,
+    Recipe,
+    Tag,
+    Favorite,
+    ShoppingCart
+)
 
 
-@admin.register(Recepie)
-class RecepieAdmin(admin.ModelAdmin):
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
@@ -40,3 +47,8 @@ class IngredientAdmin(admin.ModelAdmin):
     list_editable = ('name',)
     list_filter = ('name',)
     empty_value_display = '-пусто-'
+
+
+admin.site.register(IngredientAmount)
+admin.site.register(ShoppingCart)
+admin.site.register(Favorite)
