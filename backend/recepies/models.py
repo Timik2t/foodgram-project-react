@@ -1,10 +1,14 @@
-from django.contrib.auth import get_user_model
+from users.models import User
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-from . import settings
-
-User = get_user_model()
+from .settings import (
+    MAX_LENGTH_INGREDIENT_NAME,
+    MAX_LENGTH_MEASUREMENT_UNIT,
+    MAX_LENGTH_RECIPE_NAME,
+    MAX_LENGTH_RECIPE_TEXT,
+    MAX_LENGTH_TAG_NAME
+)
 
 
 class Tag(models.Model):
@@ -17,7 +21,7 @@ class Tag(models.Model):
     )
 
     name = models.CharField(
-        max_length=settings.MAX_LENGTH_TAG_NAME,
+        max_length=MAX_LENGTH_TAG_NAME,
         unique=True,
         verbose_name='Название'
     )
@@ -44,11 +48,11 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=settings.MAX_LENGTH_INGREDIENT_NAME,
+        max_length=MAX_LENGTH_INGREDIENT_NAME,
         verbose_name='Название'
         )
     measurement_unit = models.CharField(
-        max_length=settings.MAX_LENGTH_MEASUREMENT_UNIT,
+        max_length=MAX_LENGTH_MEASUREMENT_UNIT,
         verbose_name='Единицы измерения'
     )
 
@@ -82,12 +86,12 @@ class Recipe(models.Model):
         verbose_name='Тег'
     )
     name = models.CharField(
-        max_length=settings.MAX_LENGTH_RECIPE_NAME,
+        max_length=MAX_LENGTH_RECIPE_NAME,
         null=False,
         verbose_name='Название'
         )
     text = models.TextField(
-        max_length=settings.MAX_LENGTH_RECIPE_TEXT,
+        max_length=MAX_LENGTH_RECIPE_TEXT,
         verbose_name='Описание рецепта'
         )
     image = models.ImageField(
