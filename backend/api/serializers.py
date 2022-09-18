@@ -1,7 +1,7 @@
 from recepies.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
 from rest_framework import serializers
 from users.models import Follow, User
-
+from rest_framework import serializers
 
 class IngredientSerializer(serializers.ModelSerializer):
 
@@ -27,6 +27,7 @@ class TagSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
+        fields = '__all__'
         model = Favorite
 
 
@@ -39,10 +40,21 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
+        fields = '__all__'
         model = User
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    following = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
+
+    follower = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
 
     class Meta:
+        fields = '__all__'
         model = Follow
