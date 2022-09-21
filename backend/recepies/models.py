@@ -99,7 +99,7 @@ class Recipe(models.Model):
         upload_to='media/',
         blank=True
     )
-    cooking_time_in_minutes = models.PositiveIntegerField(
+    cooking_time = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления (в минутах)',

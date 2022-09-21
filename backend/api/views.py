@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
-from recepies.models import Ingredient, Tag
-from rest_framework import viewsets, status
+from recepies.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import Follow, User
@@ -19,23 +19,57 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
-    pass
+
+    @action(detail=True, methods=['post'])
+    def favorite(self, request, pk=None):
+        Favorite.objects.create(
+            recipe=get_object_or_404(Recipe, pk=pk),
+            user=request.user
+        )
+        serializer = FavoriteSerializer(
+            Favorite.objects.all(),
+            many=True
+        )
+        return Response(serializer.data)
+
+    @favorite.mapping.delete
+    def del_favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        if not Recipe.objects.filter(
+            recipe=recipe,
+            user=request.user
+        ).exists():
+            return Response({
+                'errors': f'{recipe} не находится в вашем избранном!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        Favorite.objects.delete(
+            recipe=recipe,
+            user=request.user
+        )
+        serializer = FavoriteSerializer(
+            Favorite.objects.filter(recipe=recipe),
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def shopping_cart(self, request, pk=None):
+        pass
+
+    @shopping_cart.mapping.delete
+    def del_shopping_cart(self, request, pk=None):
+        pass
+
+    @action(detail=False, methods=['get'])
+    def download_shopping_cart(self, request):
+        pass
 
 
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
 
-    pass
-
-
-class FavoriteViewSet(viewsets.ModelViewSet):
-    serializer_class = FavoriteSerializer
-    pass
-
-
-class ShoppingCartViewSet(viewsets.ModelViewSet):
-    serializer_class = ShoppingCartSerializer
     pass
 
 

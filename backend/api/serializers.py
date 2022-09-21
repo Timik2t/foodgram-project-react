@@ -1,7 +1,7 @@
-from recepies.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
+from recepies.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import serializers
 from users.models import Follow, User
-from rest_framework import serializers
+
 
 class IngredientSerializer(serializers.ModelSerializer):
 
@@ -13,7 +13,14 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name',)
+        fields = (
+            'ingredients',
+            'tags',
+            'image',
+            'name',
+            'text',
+            'cooking_time'
+        )
         model = Recipe
 
 
@@ -27,13 +34,14 @@ class TagSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'image', 'cooking_time')
         model = Favorite
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
+        fields = ('id', 'name', 'image', 'cooking_time')
         model = ShoppingCart
 
 
