@@ -1,4 +1,4 @@
-from recepies.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recepies.models import Favorite, Ingredient, IngredientAmount, Recipe, ShoppingCart, Tag
 from rest_framework import serializers
 from users.models import Follow, User
 
@@ -10,18 +10,20 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class IngredientAmountSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(
+        source='ingredient.id'
+    )
+    name = serializers.ReadOnlyField(
+        source='ingredient.name'
+    )
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
-        fields = (
-            'ingredients',
-            'tags',
-            'image',
-            'name',
-            'text',
-            'cooking_time'
-        )
-        model = Recipe
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+        model = IngredientAmount
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -29,6 +31,28 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'color', 'slug')
         model = Tag
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True)
+    ingredients = IngredientAmountSerializer(
+        source='ingredientamount_set',
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'name',
+            'image',
+            'text',
+            'cooking_time'
+        )
+        model = Recipe
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

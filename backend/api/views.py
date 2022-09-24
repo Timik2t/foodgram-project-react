@@ -4,7 +4,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import Follow, User
-
+    
 from .serializers import (FavoriteSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShoppingCartSerializer, TagSerializer,
@@ -14,11 +14,11 @@ from .serializers import (FavoriteSerializer, FollowSerializer,
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    pass
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
 
     @action(detail=True, methods=['post'])
     def favorite(self, request, pk=None):
@@ -69,8 +69,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-
-    pass
 
 
 class UserViewSet(viewsets.ModelViewSet):
