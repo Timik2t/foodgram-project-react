@@ -11,9 +11,14 @@ from .serializers import (FavoriteSerializer, FollowSerializer,
                           UserSerializer)
 
 
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -55,24 +60,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def shopping_cart(self, request, pk=None):
-        pass
+        ShoppingCart.objects.create(
+            recipe=get_object_or_404(Recipe, pk=pk),
+            user=request.user
+        )
+        serializer = ShoppingCartSerializer(
+            ShoppingCart.objects.all(),
+            many=True
+        )
+        return Response(serializer.data)
 
     @shopping_cart.mapping.delete
     def del_shopping_cart(self, request, pk=None):
-        pass
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        if not ShoppingCart.objects.filter(
+            recipe=recipe,
+            user=request.user
+        ).exists():
+            return Response({
+                'errors': f'{recipe} не находится в вашем списке покупок!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        ShoppingCart.objects.filter(
+            recipe=recipe,
+            user=request.user
+        ).delete()
+
+        return Response({
+                f'{recipe} Успешно удален из списка покупок!'
+            }, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
         pass
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    serializer_class = TagSerializer
-    queryset = Tag.objects.all()
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    serializer_class = UserSerializer
 
     @action(detail=True, methods=['post'])
     def subscribe(self, request, pk=None):

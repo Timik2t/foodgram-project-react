@@ -153,6 +153,10 @@ class IngredientAmount(models.Model):
 
 
 class BaseAddRecipeToList(models.Model):
+    DISPLAY = (
+        '{recipe}, '
+        '{user}'
+    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -167,7 +171,10 @@ class BaseAddRecipeToList(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return self.DISPLAY.format(
+            user=self.user,
+            recipe=self.recipe.name
+        )
 
     class Meta:
         abstract = True
@@ -178,6 +185,7 @@ class Favorite(BaseAddRecipeToList):
 
     class Meta(BaseAddRecipeToList.Meta):
         verbose_name = 'Избранное'
+        default_related_name = 'favorites'
         constraints = [
             models.UniqueConstraint(
                 name='favorite_unique',
@@ -190,3 +198,11 @@ class ShoppingCart(BaseAddRecipeToList):
 
     class Meta(BaseAddRecipeToList.Meta):
         verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        default_related_name = 'shopping_carts'
+        constraints = [
+            models.UniqueConstraint(
+                name='shopping_cart_unique',
+                fields=['recipe', 'user'],
+            ),
+        ]

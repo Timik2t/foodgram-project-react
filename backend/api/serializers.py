@@ -1,6 +1,14 @@
-from recepies.models import Favorite, Ingredient, IngredientAmount, Recipe, ShoppingCart, Tag
+from recepies.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                             ShoppingCart, Tag)
 from rest_framework import serializers
 from users.models import Follow, User
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',)
+        model = User
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -34,12 +42,12 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True)
     ingredients = IngredientAmountSerializer(
         source='ingredientamount_set',
         many=True,
-        read_only=True,
     )
+    tags = TagSerializer(many=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         fields = (
@@ -53,6 +61,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
         model = Recipe
+        extra_kwargs = {
+            'ingredients': {'required': True},
+            'tags': {'required': True},
+            'name': {'required': True},
+            'text': {'required': True},
+            'cooking_time': {'required': True},
+        }
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -63,17 +78,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(
+        source='recipe.name'
+    )
+    cooking_time = serializers.ReadOnlyField(
+        source='recipe.cooking_time'
+    )
 
     class Meta:
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = ('id', 'name', 'cooking_time')
         model = ShoppingCart
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = User
 
 
 class FollowSerializer(serializers.ModelSerializer):
