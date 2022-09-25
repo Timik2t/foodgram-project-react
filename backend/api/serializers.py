@@ -1,20 +1,9 @@
-import base64
-
-from django.core.files.base import ContentFile
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from users.models import Follow, User
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
+from drf_extra_fields.fields import Base64ImageField
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -22,6 +11,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('email', 'id', 'username', 'first_name', 'last_name',)
         model = User
+
+
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('id', 'name', 'color', 'slug')
+        model = Tag
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -32,56 +28,127 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(
-        source='ingredient.id'
-    )
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     name = serializers.ReadOnlyField(
-        source='ingredient.name'
+        source='ingredient.name',
+        read_only=True
     )
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
+        source='ingredient.measurement_unit',
+        read_only=True
     )
+    amount = serializers.IntegerField()
 
     class Meta:
         fields = ('id', 'name', 'measurement_unit', 'amount')
         model = IngredientAmount
 
 
-class TagSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = ('id', 'name', 'color', 'slug')
-        model = Tag
+TAGS_AMOUNT = 'Выберите хотя бы один тэг!'
+UNIQ_TAGS = 'Тэги должны быть уникальными!'
+MIN_COOKING_TIME = 'Время приготовления должно быть > 0!'
+INGREDIENTS_AMOUNT = 'Количество ингредиента должно быть больше нуля!'
+UNIQ_INGREDIENTS = 'Ингредиенты должны быть уникальными!'
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True
+    )
+    ingredients = IngredientAmountSerializer(many=True)
+    author = UserSerializer(read_only=True)
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'author', 'ingredients', 'tags', 'image',
+            'name', 'text', 'cooking_time'
+        )
+
+    def validate(self, data):
+        ingredients = data['ingredients']
+        ingredients_list = []
+        for ingredient in ingredients:
+            ingredient_id = ingredient['id']
+            if ingredient_id in ingredients_list:
+                raise serializers.ValidationError({
+                    'ingredients': UNIQ_INGREDIENTS
+                })
+            ingredients_list.append(ingredient_id)
+            amount = ingredient['amount']
+            if int(amount) <= 0:
+                raise serializers.ValidationError({
+                    'amount': INGREDIENTS_AMOUNT
+                })
+
+        tags = data['tags']
+        if not tags:
+            raise serializers.ValidationError({
+                'tags': TAGS_AMOUNT
+            })
+        tags_list = []
+        for tag in tags:
+            if tag in tags_list:
+                raise serializers.ValidationError({
+                    'tags': UNIQ_TAGS
+                })
+            tags_list.append(tag)
+
+        cooking_time = data['cooking_time']
+        if int(cooking_time) <= 0:
+            raise serializers.ValidationError({
+                'cooking_time': MIN_COOKING_TIME
+            })
+        return data
+
+    @staticmethod
+    def create_ingredients(ingredients, recipe):
+        for ingredient in ingredients:
+            IngredientAmount.objects.create(
+                recipe=recipe,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount']
+            )
+
+    @staticmethod
+    def create_tags(tags, recipe):
+        for tag in tags:
+            recipe.tags.add(tag)
+
+    def create(self, validated_data):
+        author = self.context.get('request').user
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipe.objects.create(author=author, **validated_data)
+        self.create_tags(tags, recipe)
+        self.create_ingredients(ingredients, recipe)
+        return recipe
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return RecipeListSerializer(instance, context=context).data
+
+    def update(self, instance, validated_data):
+        instance.tags.clear()
+        IngredientAmount.objects.filter(recipe=instance).delete()
+        self.create_tags(validated_data.pop('tags'), instance)
+        self.create_ingredients(validated_data.pop('ingredients'), instance)
+        return super().update(instance, validated_data)
+
+
+class RecipeListSerializer(serializers.ModelSerializer):
     ingredients = IngredientAmountSerializer(
         source='ingredientamount_set',
         many=True,
     )
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(read_only=True, many=True)
     author = UserSerializer(read_only=True)
-    image = Base64ImageField(required=False, allow_null=True)
 
-    class Meta:
-        fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'name',
-            'image',
-            'text',
-            'cooking_time'
-        )
-        model = Recipe
-        extra_kwargs = {
-            'ingredients': {'required': True},
-            'tags': {'required': True},
-            'name': {'required': True},
-            'text': {'required': True},
-            'cooking_time': {'required': True},
-        }
+    class Meta(RecipeSerializer.Meta):
+        read_only_fields = '__all__',
 
 
 class BasePersonalListsSerializer(serializers.ModelSerializer):
@@ -99,16 +166,40 @@ class BasePersonalListsSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
+DOUBLE_FAVORITE = "Рецепт уже добавлен в избранное"
+
+
 class FavoriteSerializer(BasePersonalListsSerializer):
 
     class Meta(BasePersonalListsSerializer.Meta):
         model = Favorite
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=['recipe', 'user'],
+                message=DOUBLE_FAVORITE
+            )
+        ]
+
+
+DOUBLE_CART = "Рецепт уже добавлен в список покупок"
 
 
 class ShoppingCartSerializer(BasePersonalListsSerializer):
 
     class Meta(BasePersonalListsSerializer.Meta):
         model = ShoppingCart
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=['recipe', 'user'],
+                message=DOUBLE_CART
+            )
+        ]
+
+
+SELF_FOLLOW = 'Нельзя подписаться на самого себя'
+DOUBLE_FOLLOW = 'Подписка уже существует'
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -125,3 +216,15 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Follow
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=['follower', 'following'],
+                message=DOUBLE_FOLLOW
+            )
+        ]
+
+    def validate_following(self, value):
+        if self.context['request'].user == value:
+            raise serializers.ValidationError(SELF_FOLLOW)
+        return value

@@ -27,7 +27,7 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         unique=True,
-        verbose_name='Идентификатор тега'
+        verbose_name='Идентификатор тэга'
         )
     color = models.CharField(
         default='#49B64E',
@@ -39,8 +39,8 @@ class Tag(models.Model):
         )
 
     class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Тэг'
+        verbose_name_plural = 'Тэги'
 
     def __str__(self):
         return self.name
@@ -83,7 +83,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
         related_name='tags',
-        verbose_name='Тег'
+        verbose_name='Тэг'
     )
     name = models.CharField(
         max_length=MAX_LENGTH_RECIPE_NAME,
@@ -143,7 +143,8 @@ class IngredientAmount(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Количество ингредиента для рецепта'
+        verbose_name = 'Количество ингредиентов для рецепта'
+        verbose_name_plural = 'Количество ингредиентов для рецептов'
         constraints = [
             models.UniqueConstraint(
                 name='recipe_ingredient_unique',
