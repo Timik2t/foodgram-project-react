@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
-from recepies.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import Follow, User
-    
+
 from .serializers import (FavoriteSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShoppingCartSerializer, TagSerializer,
@@ -41,7 +41,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def del_favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
 
-        if not Recipe.objects.filter(
+        if not Favorite.objects.filter(
             recipe=recipe,
             user=request.user
         ).exists():
@@ -49,14 +49,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'errors': f'{recipe} не находится в вашем избранном!'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        Favorite.objects.delete(
+        Favorite.objects.filter(
             recipe=recipe,
             user=request.user
-        )
-        serializer = FavoriteSerializer(
-            Favorite.objects.filter(recipe=recipe),
-        )
-        return Response(serializer.data)
+        ).delete()
+
+        return Response({
+                f'{recipe} Успешно удален из избраного!'
+            }, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post'])
     def shopping_cart(self, request, pk=None):

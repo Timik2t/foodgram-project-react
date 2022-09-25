@@ -1,7 +1,20 @@
-from recepies.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                             ShoppingCart, Tag)
+import base64
+
+from django.core.files.base import ContentFile
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import serializers
 from users.models import Follow, User
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,6 +61,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     tags = TagSerializer(many=True)
     author = UserSerializer(read_only=True)
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         fields = (
@@ -70,23 +84,30 @@ class RecipeSerializer(serializers.ModelSerializer):
         }
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = ('id', 'name', 'image', 'cooking_time')
-        model = Favorite
-
-
-class ShoppingCartSerializer(serializers.ModelSerializer):
+class BasePersonalListsSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(
         source='recipe.name'
     )
     cooking_time = serializers.ReadOnlyField(
         source='recipe.cooking_time'
     )
+    image = serializers.ReadOnlyField(
+        source='recipe.image'
+    )
 
     class Meta:
-        fields = ('id', 'name', 'cooking_time')
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(BasePersonalListsSerializer):
+
+    class Meta(BasePersonalListsSerializer.Meta):
+        model = Favorite
+
+
+class ShoppingCartSerializer(BasePersonalListsSerializer):
+
+    class Meta(BasePersonalListsSerializer.Meta):
         model = ShoppingCart
 
 

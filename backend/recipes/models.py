@@ -96,7 +96,7 @@ class Recipe(models.Model):
         )
     image = models.ImageField(
         verbose_name='Картинка',
-        upload_to='media/',
+        upload_to='recipes/images/',
         blank=True
     )
     cooking_time = models.PositiveIntegerField(
@@ -202,7 +202,7 @@ class ShoppingCart(BaseAddRecipeToList):
         default_related_name = 'shopping_carts'
         constraints = [
             models.UniqueConstraint(
-                name='shopping_cart_unique',
+                name='shopping_carts_unique',
                 fields=['recipe', 'user'],
             ),
         ]
