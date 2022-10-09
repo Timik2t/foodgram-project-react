@@ -1,12 +1,21 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 from . import settings
+from .validations import validate_username
 
 
 class User(AbstractUser):
+    USER = 'user'
+    ADMIN = 'admin'
+    ROLES = {
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+    }
     username = models.CharField(
         max_length=settings.MAX_LENGTH_USERNAME,
         unique=True,
+        validators=[validate_username],
         verbose_name='Логин'
         )
     first_name = models.CharField(
@@ -23,7 +32,25 @@ class User(AbstractUser):
         null=False,
         db_index=True
         )
-    is_admin = models.BooleanField(default=False)
+    password = models.CharField(
+        verbose_name='Пароль',
+        max_length=settings.MAX_LENGTH_PASSWORD,
+        help_text='Введите пароль',
+    )
+    role = models.TextField(
+        verbose_name='Роль',
+        max_length=max(len(role) for role, _ in ROLES),
+        choices=ROLES,
+        default=USER
+    )
+
+    @property
+    def is_admin(self):
+        return (self.role == self.ADMIN or self.is_staff)
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email']
