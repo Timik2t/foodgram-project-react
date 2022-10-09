@@ -20,7 +20,7 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request is None:
+        if request is None or request.user.is_anonymous:
             return False
         return Follow.objects.filter(
             follower=obj,
@@ -185,15 +185,21 @@ class RecipeListSerializer(serializers.ModelSerializer):
         read_only_fields = '__all__',
 
     def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
         return Favorite.objects.filter(
             recipe=obj,
-            user=self.context['request'].user
+            user=user
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
         return ShoppingCart.objects.filter(
             recipe=obj,
-            user=self.context['request'].user
+            user=user
         ).exists()
 
 

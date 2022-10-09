@@ -17,21 +17,21 @@ class User(AbstractUser):
         unique=True,
         validators=[validate_username],
         verbose_name='Логин'
-        )
+    )
     first_name = models.CharField(
         verbose_name='Имя',
         max_length=settings.MAX_LENGTH_NAME
-        )
+    )
     last_name = models.CharField(
         verbose_name='Фамилия',
         max_length=settings.MAX_LENGTH_SURNAME
-        )
+    )
     email = models.EmailField(
         max_length=settings.MAX_LENGTH_EMAIL,
         unique=True,
         null=False,
         db_index=True
-        )
+    )
     password = models.CharField(
         verbose_name='Пароль',
         max_length=settings.MAX_LENGTH_PASSWORD,

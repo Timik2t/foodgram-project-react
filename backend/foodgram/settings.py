@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -16,7 +15,7 @@ SECRET_KEY = os.getenv('DJANGO_KEY', 'default_key')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '*',
+    'backend',
     'http://84.201.160.48',
     'localhost',
     '127.0.0.1',
@@ -25,7 +24,7 @@ ALLOWED_HOSTS = [
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_URLS_REGEX = r'^/api/.*$'
 CORS_ALLOWED_ORIGINS = [
-    'http://27.0.0.1:3000'
+    'http://27.0.0.1:3000',
     'http://localhost:3000',
 ]
 
@@ -38,9 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework.authtoken',
+    # Additional apps
     'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
     'corsheaders',
+    # Project apps
     'djoser',
     'api',
     'recipes',
@@ -149,6 +151,21 @@ DJOSER = {
         'current_user': 'api.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
-        'user': ['rest_framework.permissions.AllowAny'],
+        'user': ('rest_framework.permissions.IsAuthenticated',),
+        'user_list': ('rest_framework.permissions.AllowAny',)
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
 }
