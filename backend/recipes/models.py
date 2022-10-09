@@ -24,7 +24,7 @@ class Tag(models.Model):
     slug = models.SlugField(
         unique=True,
         verbose_name='Идентификатор тэга'
-        )
+    )
     color = models.CharField(
         default='#49B64E',
         unique=True,
@@ -32,7 +32,7 @@ class Tag(models.Model):
         validators=[hex_validator, ],
         verbose_name='Цветовой HEX-код',
         help_text='https://colorscheme.ru/html-colors.html'
-        )
+    )
 
     class Meta:
         verbose_name = 'Тэг'
@@ -46,7 +46,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         max_length=MAX_LENGTH_INGREDIENT_NAME,
         verbose_name='Название'
-        )
+    )
     measurement_unit = models.CharField(
         max_length=MAX_LENGTH_MEASUREMENT_UNIT,
         verbose_name='Единицы измерения'
@@ -75,7 +75,7 @@ class Recipe(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор рецепта'
-        )
+    )
     tags = models.ManyToManyField(
         Tag,
         related_name='tags',
@@ -85,11 +85,11 @@ class Recipe(models.Model):
         max_length=MAX_LENGTH_RECIPE_NAME,
         null=False,
         verbose_name='Название'
-        )
+    )
     text = models.TextField(
         max_length=MAX_LENGTH_RECIPE_TEXT,
         verbose_name='Описание рецепта'
-        )
+    )
     image = models.ImageField(
         verbose_name='Картинка',
         upload_to='recipes/images/',
@@ -131,7 +131,7 @@ class IngredientAmount(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
-        )
+    )
     amount = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
