@@ -1,13 +1,10 @@
 import datetime
 
 from django.shortcuts import HttpResponse, get_object_or_404
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import Follow, User
 
 from .filters import AuthorTagFilter, IngredientSearchFilter
 from .pagination import LimitPageNumberPagination
@@ -17,6 +14,9 @@ from .serializers import (CustomUserCreateSerializer, CustomUserSerializer,
                           IngredientSerializer, RecipeListSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
                           TagSerializer)
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
+from users.models import Follow, User
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
