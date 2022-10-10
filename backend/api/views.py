@@ -1,12 +1,16 @@
-from django.shortcuts import get_object_or_404
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+import datetime
+
+from django.shortcuts import HttpResponse, get_object_or_404
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from users.models import Follow, User
-from .pagination import LimitPageNumberPagination
 
+from .filters import AuthorTagFilter, IngredientSearchFilter
+from .pagination import LimitPageNumberPagination
 from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (CustomUserCreateSerializer, CustomUserSerializer,
                           FavoriteSerializer, FollowSerializer,
@@ -19,17 +23,23 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (IngredientSearchFilter,)
+    search_fields = ('^name',)
+    pagination_class = None
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsOwnerOrReadOnly,)
+    filter_class = AuthorTagFilter
+    pagination_class = LimitPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -50,7 +60,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorite.objects.all(),
             many=True
         )
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def del_favorite(self, request, pk=None):
@@ -88,7 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart.objects.all(),
             many=True
         )
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def del_shopping_cart(self, request, pk=None):
@@ -118,7 +128,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        pass
+        shopping_list = {}
+        ingredients = IngredientAmount.objects.filter(
+            recipe__shopping_carts__user=request.user
+        )
+        for ingredient in ingredients:
+            amount = ingredient.amount
+            name = ingredient.ingredient.name
+            measurement_unit = ingredient.ingredient.measurement_unit
+            if name not in shopping_list:
+                shopping_list[name] = {
+                    'measurement_unit': measurement_unit,
+                    'amount': amount
+                }
+            else:
+                shopping_list[name]['amount'] += amount
+        main_list = (
+            [f"* {item}: {value['amount']}"
+             f" {value['measurement_unit']};\n"
+             for item, value in shopping_list.items()]
+        )
+        main_list.append(
+            f'\n FoodGram, connecting people (｡◕‿◕｡)'
+            f'\n {datetime.date.today().year}'
+        )
+        response = HttpResponse(main_list, 'Content-Type: text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="ShoppingList.txt"')
+        return response
 
 
 class UserViewSet(viewsets.ModelViewSet):

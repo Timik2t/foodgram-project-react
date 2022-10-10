@@ -29,7 +29,7 @@ class Tag(models.Model):
         default='#49B64E',
         unique=True,
         max_length=7,
-        validators=[hex_validator, ],
+        validators=[hex_validator],
         verbose_name='Цветовой HEX-код',
         help_text='https://colorscheme.ru/html-colors.html'
     )
@@ -93,7 +93,6 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='Картинка',
         upload_to='recipes/images/',
-        blank=True
     )
     cooking_time = models.PositiveIntegerField(
         default=1,

@@ -91,7 +91,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             'id', 'author', 'ingredients', 'tags', 'image',
             'name', 'text', 'cooking_time'
         )
-        extra_kwargs = {'cooking_time': {'required': True}}
+        extra_kwargs = {
+            'cooking_time': {'required': True},
+            'image': {'required': True}
+        }
 
     def validate(self, data):
         ingredients = data['ingredients']
