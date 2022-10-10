@@ -132,4 +132,4 @@ dmypy.json
 .idea
 
 
-users for tests.txt
+./backend/media/
