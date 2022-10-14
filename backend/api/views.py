@@ -131,10 +131,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_list = {}
         ingredients = IngredientAmount.objects.select_related(
             'recipe', 'ingredient'
-        )
-        ingredients = ingredients.filter(
-            recipe__shopping_carts__user=request.user
-        )
+        ).filter(recipe__shopping_carts__user=request.user)
+
         for ingredient in ingredients:
             amount = ingredient.amount
             name = ingredient.ingredient.name
