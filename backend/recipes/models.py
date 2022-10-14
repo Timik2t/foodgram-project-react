@@ -118,7 +118,8 @@ class Recipe(models.Model):
 
 class IngredientAmount(models.Model):
     DISPLAY = (
-        '{ingredients}, '
+        '{recipe}: '
+        '{ingredient}, '
         '{amount}'
     )
     ingredient = models.ForeignKey(
@@ -147,6 +148,13 @@ class IngredientAmount(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return self.DISPLAY.format(
+            recipe=self.recipe,
+            ingredient=self.ingredient,
+            amount=self.amount
+        )
+
 
 class BaseAddRecipeToList(models.Model):
     DISPLAY = (
@@ -166,15 +174,15 @@ class BaseAddRecipeToList(models.Model):
         verbose_name='Дата добавления'
     )
 
+    class Meta:
+        abstract = True
+        ordering = ('-add_date',)
+
     def __str__(self):
         return self.DISPLAY.format(
             user=self.user,
             recipe=self.recipe.name
         )
-
-    class Meta:
-        abstract = True
-        ordering = ('-add_date',)
 
 
 class Favorite(BaseAddRecipeToList):

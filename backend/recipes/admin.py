@@ -4,8 +4,14 @@ from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingCart, Tag)
 
 
+class RecipeIngredientInline(admin.TabularInline):
+    model = IngredientAmount
+    min_num = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = [RecipeIngredientInline]
     list_display = (
         'name',
         'author',
@@ -25,7 +31,7 @@ class TagAdmin(admin.ModelAdmin):
         'slug',
         'color',
     )
-    prepopulated_fields = {"slug": ("name",)}
+    prepopulated_fields = {'slug': ('name',)}
     list_editable = ('color',)
     search_fields = ('name',)
     empty_value_display = '-пусто-'
