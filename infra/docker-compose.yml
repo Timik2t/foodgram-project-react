@@ -21,7 +21,7 @@ services:
           - ./.env
 
   frontend:
-    image: timik2t/foodgram_frontend:latest
+    image: timik2t/foodgram_frontend:v1.0
     restart: always
     volumes:
       - ../frontend/:/app/result_build/
