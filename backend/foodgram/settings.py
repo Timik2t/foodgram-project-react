@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     'http://84.201.160.48',
     'localhost',
     '127.0.0.1',
+    '*',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = False
