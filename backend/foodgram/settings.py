@@ -16,7 +16,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     'backend',
-    'http://84.201.160.48',
+    '84.201.160.48',
     'localhost',
     '127.0.0.1',
     '*',
