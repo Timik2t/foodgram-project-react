@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('DJANGO_KEY', 'default_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'backend',
@@ -22,12 +22,9 @@ ALLOWED_HOSTS = [
     '*',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'^/api/.*$'
-CORS_ALLOWED_ORIGINS = [
-    'http://27.0.0.1:3000',
-    'http://localhost:3000',
-]
+# CORS_ALLOWED_ORIGINS = ['http://27.0.0.1:3000', 'http://localhost:3000',]
 
 # Application definition
 
