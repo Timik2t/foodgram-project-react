@@ -1,8 +1,8 @@
 import datetime
 
 from django.shortcuts import HttpResponse, get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend, filters
-from rest_framework import status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -237,5 +237,4 @@ class SubscriptionListView(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        update_queryset = User.objects.filter(following__user=user)
-        return update_queryset
+        return User.objects.filter(following__user=user)
