@@ -205,6 +205,15 @@ class RecipeListSerializer(serializers.ModelSerializer):
         ).exists()
 
 
+class CropRecipeSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class BasePersonalListsSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(
         source='recipe.name'
@@ -282,3 +291,14 @@ class FollowSerializer(serializers.ModelSerializer):
         if self.context['request'].user == value:
             raise serializers.ValidationError(SELF_FOLLOW)
         return value
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        limit = request.GET.get('recipes_limit')
+        queryset = Recipe.objects.filter(author=obj.author)
+        if limit:
+            queryset = queryset[:int(limit)]
+        return CropRecipeSerializer(queryset, many=True).data
+
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
