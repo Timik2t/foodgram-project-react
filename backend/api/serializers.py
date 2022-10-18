@@ -205,15 +205,6 @@ class RecipeListSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class CropRecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ('id', 'name', 'image', 'cooking_time')
-
-
 class BasePersonalListsSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(
         source='recipe.name'
@@ -261,6 +252,13 @@ class ShoppingCartSerializer(BasePersonalListsSerializer):
         ]
 
 
+class FollowRecipeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 SELF_FOLLOW = 'Нельзя подписаться на самого себя'
 DOUBLE_FOLLOW = 'Подписка уже существует'
 
@@ -292,13 +290,27 @@ class FollowSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(SELF_FOLLOW)
         return value
 
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if not user:
+            return False
+        return Follow.objects.filter(
+            follower=obj,
+            following=user
+        ).exists()
+
     def get_recipes(self, obj):
         request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
-        queryset = Recipe.objects.filter(author=obj.author)
-        if limit:
-            queryset = queryset[:int(limit)]
-        return CropRecipeSerializer(queryset, many=True).data
+        limit_recipes = request.query_params.get('recipes_limit')
+        if limit_recipes is not None:
+            recipes = obj.recipes.all()[:(int(limit_recipes))]
+        else:
+            recipes = obj.recipes.all()
+        context = {'request': request}
+        return FollowRecipeSerializer(
+            recipes, many=True,
+            context=context).data
 
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+    @staticmethod
+    def get_recipes_count(obj):
+        return obj.recipes.count()
