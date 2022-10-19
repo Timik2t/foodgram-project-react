@@ -205,48 +205,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class BasePersonalListsSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source='recipe.name')
-    cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
-    image = serializers.ReadOnlyField(source='recipe.image')
-
-    class Meta:
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
-DOUBLE_FAVORITE = 'Рецепт уже добавлен в избранное'
-
-
-class FavoriteSerializer(BasePersonalListsSerializer):
-
-    class Meta(BasePersonalListsSerializer.Meta):
-        model = Favorite
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Favorite.objects.all(),
-                fields=['recipe', 'user'],
-                message=DOUBLE_FAVORITE
-            )
-        ]
-
-
-DOUBLE_CART = 'Рецепт уже добавлен в список покупок'
-
-
-class ShoppingCartSerializer(BasePersonalListsSerializer):
-
-    class Meta(BasePersonalListsSerializer.Meta):
-        model = ShoppingCart
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
-                fields=['recipe', 'user'],
-                message=DOUBLE_CART
-            )
-        ]
-
-
-class FollowRecipeSerializer(serializers.ModelSerializer):
+class ShortRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
@@ -295,7 +254,7 @@ class FollowSerializer(serializers.ModelSerializer):
         else:
             recipes = recipe.all()
         context = {'request': request}
-        return FollowRecipeSerializer(
+        return ShortRecipeSerializer(
             recipes,
             many=True,
             context=context).data

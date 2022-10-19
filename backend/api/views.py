@@ -11,10 +11,9 @@ from .filters import AuthorTagFilter, IngredientFilter
 from .pagination import LimitPageNumberPagination
 from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (CustomUserCreateSerializer, CustomUserSerializer,
-                          FavoriteSerializer, FollowSerializer,
-                          IngredientSerializer, RecipeListSerializer,
-                          RecipeSerializer, ShoppingCartSerializer,
-                          TagSerializer)
+                          FollowSerializer, IngredientSerializer,
+                          RecipeListSerializer, RecipeSerializer,
+                          ShortRecipeSerializer, TagSerializer)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from users.models import Follow, User
@@ -53,12 +52,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if Favorite.objects.filter(
+            recipe=recipe,
+            user=request.user
+        ).exists():
+            return Response({
+                'errors': f'{recipe} уже находится в вашем избранном!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         Favorite.objects.create(
-            recipe=get_object_or_404(Recipe, pk=pk),
+            recipe=recipe,
             user=request.user
         )
-        serializer = FavoriteSerializer(
-            Favorite.objects.all(),
+        serializer = ShortRecipeSerializer(
+            Recipe.objects.filter(id=pk),
             many=True
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -91,12 +98,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if ShoppingCart.objects.filter(
+            recipe=recipe,
+            user=request.user
+        ).exists():
+            return Response({
+                'errors': f'{recipe} уже находится в вашем избранном!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         ShoppingCart.objects.create(
-            recipe=get_object_or_404(Recipe, pk=pk),
+            recipe=recipe,
             user=request.user
         )
-        serializer = ShoppingCartSerializer(
-            ShoppingCart.objects.all(),
+        serializer = ShortRecipeSerializer(
+            Recipe.objects.filter(id=pk),
             many=True
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
