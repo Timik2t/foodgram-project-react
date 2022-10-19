@@ -187,10 +187,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=['get'],
         permission_classes=[IsAuthenticated]
     )
-    def subscriptions(self, request, pk=None):
+    def subscriptions(self, request):
         serializer = FollowSerializer(
             Follow.objects.filter(following=self.request.user),
             many=True
