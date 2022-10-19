@@ -206,15 +206,9 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
 
 class BasePersonalListsSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(
-        source='recipe.name'
-    )
-    cooking_time = serializers.ReadOnlyField(
-        source='recipe.cooking_time'
-    )
-    image = serializers.ReadOnlyField(
-        source='recipe.image'
-    )
+    name = serializers.ReadOnlyField(source='recipe.name')
+    cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
+    image = serializers.ReadOnlyField(source='recipe.image')
 
     class Meta:
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -264,29 +258,19 @@ DOUBLE_FOLLOW = 'Подписка уже существует'
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    following = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all()
-    )
-
-    follower = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all()
-    )
+    id = serializers.ReadOnlyField(source='following.id')
+    email = serializers.ReadOnlyField(source='following.email')
+    username = serializers.ReadOnlyField(source='following.username')
+    first_name = serializers.ReadOnlyField(source='following.first_name')
+    last_name = serializers.ReadOnlyField(source='following.last_name')
     is_subscribed = serializers.SerializerMethodField(read_only=True)
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count',
+            'id', 'email', 'username', 'first_name',
+            'last_name', 'is_subscribed', 'recipes', 'recipes_count'
         )
         model = Follow
         validators = [
@@ -302,27 +286,29 @@ class FollowSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(SELF_FOLLOW)
         return value
 
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if not user:
-            return False
-        return Follow.objects.filter(
-            follower=obj,
-            following=user
-        ).exists()
-
     def get_recipes(self, obj):
         request = self.context.get('request')
         limit_recipes = request.query_params.get('recipes_limit')
+        recipe = Recipe.objects.filter(author=obj.following)
         if limit_recipes is not None:
-            recipes = obj.recipes.all()[:(int(limit_recipes))]
+            recipes = recipe.all()[:(int(limit_recipes))]
         else:
-            recipes = obj.recipes.all()
+            recipes = recipe.all()
         context = {'request': request}
         return FollowRecipeSerializer(
-            recipes, many=True,
+            recipes,
+            many=True,
             context=context).data
+
+    def get_is_subscribed(self, obj):
+        following = obj.following
+        if not following:
+            return False
+        return Follow.objects.filter(
+            following=obj.follower,
+            follower=following
+        ).exists()
 
     @staticmethod
     def get_recipes_count(obj):
-        return obj.recipes.count()
+        return Recipe.objects.filter(author=obj.following).count()

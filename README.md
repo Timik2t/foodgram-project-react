@@ -27,7 +27,7 @@ Docker-compose 3.3
 ```
 git clone https://github.com/Timik2t/foodgram-project-react.git
 ```
-## Для работы с удаленным сервером (на ubuntu):
+### Для работы с удаленным сервером (на ubuntu):
 * Выполните вход на свой удаленный сервер
 
 * Установите docker на сервер:

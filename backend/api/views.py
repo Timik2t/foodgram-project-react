@@ -188,19 +188,26 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def subscribe(self, request, pk=None):
         following = get_object_or_404(User, pk=pk)
+        follower = self.request.user
 
         if request.user == following:
             return Response({
-                'errors': 'Вы не можете подписываться на самого себя'
+                'errors': 'Вы не можете подписываться на самого себя!'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        Follow.objects.create(
-            following=get_object_or_404(User, pk=pk),
-            follower=self.request.user
+        if Follow.objects.filter(following=following,
+                                 follower=follower).exists():
+            return Response({
+                'errors': f'Вы уже подписанны на автора {following}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        new_follow = Follow.objects.create(
+            following=following,
+            follower=follower
         )
         serializer = FollowSerializer(
-            Follow.objects.filter(following=following),
-            many=True
+            new_follow,
+            context={'request': request}
         )
         return Response(serializer.data)
 
@@ -232,10 +239,9 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         serializer = FollowSerializer(
-            self.paginate_queryset(
-                Follow.objects.filter(user=request.user)
+            Follow.objects.filter(
+                following=self.request.user
             ),
-            many=True,
-            context={'request': request}
+            many=True
         )
-        return self.get_paginated_response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
