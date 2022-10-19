@@ -172,6 +172,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(main_list, 'Content-Type: text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="ShoppingList.txt"')
+        response['Content-Transfer-Encoding'] = 'binary'
         return response
 
 
@@ -189,9 +190,9 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['get'],
         permission_classes=[IsAuthenticated]
     )
-    def me(self, request, pk=None):
-        serializer = CustomUserSerializer(
-            User.objects.filter(username=self.request.user),
+    def subscriptions(self, request, pk=None):
+        serializer = FollowSerializer(
+            Follow.objects.filter(following=self.request.user),
             many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -248,15 +249,3 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=[IsAuthenticated])
-    def subscriptions(self, request):
-        serializer = FollowSerializer(
-            Follow.objects.filter(
-                following=self.request.user
-            ),
-            many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
