@@ -28,13 +28,12 @@ class Command(BaseCommand):
                             name=ingredient["name"],
                             measurement_unit=ingredient["measurement_unit"]
                         )
-                        self.stdout.write(
-                            self.style.SUCCESS('Все данные загружены')
-                        )
                     except IntegrityError:
                         print(f'Ингридиет {ingredient["name"]} '
                               f'{ingredient["measurement_unit"]} '
                               f'уже есть в базе')
-
+                self.stdout.write(
+                            self.style.SUCCESS('Все данные загружены')
+                )
         except FileNotFoundError:
             raise CommandError('Файл отсутствует в директории data')
