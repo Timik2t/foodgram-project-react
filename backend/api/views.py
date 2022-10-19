@@ -172,7 +172,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(main_list, 'Content-Type: text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="ShoppingList.txt"')
-        response['Content-Transfer-Encoding'] = 'binary'
         return response
 
 
