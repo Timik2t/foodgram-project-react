@@ -1,8 +1,8 @@
 import datetime
 
 from django.shortcuts import HttpResponse, get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend, filters
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -226,15 +226,16 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
-
-class SubscriptionListView(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = FollowSerializer
-    pagination_class = LimitPageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^following__user',)
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return User.objects.filter(following__user=user)
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated])
+    def subscriptions(self, request):
+        serializer = FollowSerializer(
+            self.paginate_queryset(
+                Follow.objects.filter(user=request.user)
+            ),
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
