@@ -33,7 +33,7 @@ class Command(BaseCommand):
                               f'{ingredient["measurement_unit"]} '
                               f'уже есть в базе')
                 self.stdout.write(
-                            self.style.SUCCESS('Все данные загружены')
+                    self.style.SUCCESS('Все данные загружены')
                 )
         except FileNotFoundError:
             raise CommandError('Файл отсутствует в директории data')
