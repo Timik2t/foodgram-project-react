@@ -248,4 +248,3 @@ class UserViewSet(viewsets.ModelViewSet):
             many=True
         )
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
-
