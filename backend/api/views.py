@@ -257,5 +257,4 @@ class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         follower = self.request.user
-        new_queryset = Follow.objects.filter(follower=follower)
-        return new_queryset
+        return Follow.objects.filter(follower=follower)
