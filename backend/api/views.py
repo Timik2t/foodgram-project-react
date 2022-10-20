@@ -197,21 +197,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
-        detail=False,
-        permission_classes=[IsAuthenticated],
-    )
-    def subscriptions(self, request):
-        follower = request.user
-        queryset = Follow.objects.filter(follower=follower)
-        pages = self.paginate_queryset(queryset)
-        serializer = FollowSerializer(
-            pages,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
-
-    @action(
         detail=True,
         methods=['post'],
         permission_classes=[IsAuthenticated]
@@ -262,3 +247,15 @@ class UserViewSet(viewsets.ModelViewSet):
             many=True
         )
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Follow.objects.all()
+    pagination_class = LimitPageNumberPagination
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowSerializer
+
+    def get_queryset(self):
+        follower = self.request.user
+        new_queryset = Follow.objects.filter(follower=follower)
+        return new_queryset
