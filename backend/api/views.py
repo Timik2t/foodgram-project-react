@@ -186,14 +186,18 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
     )
     def subscriptions(self, request):
+        follower = request.user
+        queryset = Follow.objects.filter(follower=follower)
+        pages = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
-            Follow.objects.filter(following=self.request.user),
-            many=True
+            pages,
+            many=True,
+            context={'request': request}
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
