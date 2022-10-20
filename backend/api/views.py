@@ -186,6 +186,18 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request, pk=None):
+        serializer = CustomUserSerializer(
+            User.objects.filter(username=self.request.user),
+            many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
         permission_classes=[IsAuthenticated],
     )
     def subscriptions(self, request):
@@ -197,7 +209,10 @@ class UserViewSet(viewsets.ModelViewSet):
             many=True,
             context={'request': request}
         )
-        return self.get_paginated_response(serializer.data)
+        return self.get_paginated_response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
     @action(
         detail=True,
