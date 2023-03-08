@@ -107,7 +107,6 @@ sudo docker-compose up -d --build
     TELEGRAM_TO=<ID чата, в который придет сообщение>
     TELEGRAM_TOKEN=<токен вашего бота>
     ``` 
-
 ## Проект в интернете
 - [сервер](http://84.201.160.48/recipes)
 - [админ панель](http://84.201.160.48/admin)
