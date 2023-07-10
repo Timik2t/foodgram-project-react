@@ -111,3 +111,6 @@ sudo docker-compose up -d --build
 - [сервер](http://84.201.160.48/recipes)
 - [админ панель](http://84.201.160.48/admin)
 - [документация](http://84.201.160.48/redoc)
+
+### Автор
+[Исхаков Тимур](https://github.com/Timik2t)
